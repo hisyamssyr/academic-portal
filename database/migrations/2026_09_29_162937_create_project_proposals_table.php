@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->string('status')->default('draft');
+            $table->decimal('score', 5, 2)->nullable();
+            $table->text('feedback')->nullable();
+            $table->foreignId('grader_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('reviewed_at')->nullable();
             $table->timestamps();
 
             $table->index('status');

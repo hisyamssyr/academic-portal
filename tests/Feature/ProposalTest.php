@@ -114,6 +114,72 @@ class ProposalTest extends TestCase
         $this->assertSame(ProposalStatus::Submitted, $proposal->refresh()->status);
     }
 
+    public function test_student_sees_score_and_feedback_of_reviewed_proposal(): void
+    {
+        $student = User::factory()->mahasiswa()->create();
+        ProjectProposal::factory()->for($student)->reviewed()->create([
+            'title' => 'Proposal Dinilai',
+            'score' => 90,
+            'feedback' => 'Kerja bagus.',
+        ]);
+
+        $this->actingAs($student)
+            ->get('/proposals')
+            ->assertOk()
+            ->assertSee('Proposal Dinilai')
+            ->assertSee('90')
+            ->assertSee('Kerja bagus.');
+    }
+
+    public function test_editing_a_reviewed_proposal_sends_it_back_for_review_as_revised(): void
+    {
+        $student = User::factory()->mahasiswa()->create();
+        $proposal = ProjectProposal::factory()->for($student)->reviewed()->create([
+            'score' => 88.5,
+            'feedback' => 'Feedback awal.',
+        ]);
+
+        $response = $this->actingAs($student)->patch(route('proposals.update', $proposal), [
+            'title' => 'Judul Revisi',
+            'description' => 'Deskripsi revisi.',
+        ]);
+
+        $response->assertRedirect(route('proposals.index'));
+        $this->assertDatabaseHas('project_proposals', [
+            'id' => $proposal->id,
+            'title' => 'Judul Revisi',
+            'status' => ProposalStatus::Revised->value,
+            'score' => 88.5,
+            'feedback' => 'Feedback awal.',
+        ]);
+    }
+
+    public function test_editing_a_submitted_proposal_keeps_it_submitted(): void
+    {
+        $student = User::factory()->mahasiswa()->create();
+        $proposal = ProjectProposal::factory()->for($student)->submitted()->create();
+
+        $this->actingAs($student)->patch(route('proposals.update', $proposal), [
+            'title' => 'Judul Diperbarui',
+            'description' => 'Deskripsi diperbarui.',
+        ])->assertRedirect(route('proposals.index'));
+
+        $this->assertSame(ProposalStatus::Submitted, $proposal->refresh()->status);
+    }
+
+    public function test_editing_a_draft_proposal_keeps_it_draft(): void
+    {
+        $student = User::factory()->mahasiswa()->create();
+        $proposal = ProjectProposal::factory()->for($student)->create();
+
+        $this->actingAs($student)->patch(route('proposals.update', $proposal), [
+            'title' => 'Judul Diperbarui',
+            'description' => 'Deskripsi diperbarui.',
+        ])->assertRedirect(route('proposals.index'));
+
+        $this->assertSame(ProposalStatus::Draft, $proposal->refresh()->status);
+    }
+
     #[DataProvider('staffRoles')]
     public function test_staff_cannot_access_student_proposal_area(UserRole $role): void
     {

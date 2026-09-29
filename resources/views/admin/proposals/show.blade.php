@@ -19,7 +19,7 @@
 
                     <dl class="mt-6 grid gap-4 text-sm sm:grid-cols-2">
                         <div>
-                            <dt class="text-gray-500 dark:text-gray-400">Dibuat</dt>
+                            <dt class="text-gray-500 dark:text-gray-400">Diajukan</dt>
                             <dd class="mt-1">{{ $proposal->created_at->format('d M Y H:i') }}</dd>
                         </div>
                         <div>
@@ -52,31 +52,66 @@
                 </div>
             </div>
 
-            <!-- Review Status -->
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h3 class="text-lg font-semibold">Ubah Status Review</h3>
+            @if ($proposal->reviewed_at !== null)
+                <!-- Review Result -->
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <h3 class="text-lg font-semibold">Hasil Review</h3>
 
-                    <form method="POST" action="{{ route('admin.proposals.update', $proposal) }}" class="mt-4 flex flex-wrap items-end gap-4">
-                        @csrf
-                        @method('patch')
-
-                        <div>
-                            <x-input-label for="status" value="Status" />
-                            <select id="status" name="status" class="mt-1 block rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 shadow-sm">
-                                @foreach (App\Enums\ProposalStatus::cases() as $status)
-                                    <option value="{{ $status->value }}" @selected(old('status', $proposal->status->value) === $status->value)>
-                                        {{ $status->label() }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('status')" class="mt-2" />
-                        </div>
-
-                        <x-primary-button>Simpan Status</x-primary-button>
-                    </form>
+                        <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+                            <div>
+                                <dt class="text-gray-500 dark:text-gray-400">Nilai</dt>
+                                <dd class="mt-1 text-2xl font-semibold">{{ $proposal->score }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-500 dark:text-gray-400">Direview oleh</dt>
+                                <dd class="mt-1">{{ $proposal->grader?->name ?? '-' }}</dd>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <dt class="text-gray-500 dark:text-gray-400">Feedback</dt>
+                                <dd class="mt-1 whitespace-pre-line">{{ $proposal->feedback ?: '-' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-gray-500 dark:text-gray-400">Tanggal review</dt>
+                                <dd class="mt-1">{{ $proposal->reviewed_at?->format('d M Y H:i') ?? '-' }}</dd>
+                            </div>
+                        </dl>
+                    </div>
                 </div>
-            </div>
+            @endif
+
+            <!-- Review Form -->
+            @can('input-nilai')
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        <h3 class="text-lg font-semibold">{{ $proposal->isReviewed() ? 'Koreksi Review' : 'Review Proposal' }}</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Menyimpan review akan mengubah status proposal menjadi <strong>Reviewed</strong>.
+                        </p>
+
+                        <form method="POST" action="{{ route('admin.proposals.review', $proposal) }}" class="mt-4 space-y-6">
+                            @csrf
+                            @method('patch')
+
+                            <div class="grid gap-6 sm:grid-cols-2">
+                                <div>
+                                    <x-input-label for="score" value="Nilai Proposal (0-100)" />
+                                    <x-text-input id="score" name="score" type="number" step="0.01" min="0" max="100" class="mt-1 block w-full" :value="old('score', $proposal->score)" required />
+                                    <x-input-error :messages="$errors->get('score')" class="mt-2" />
+                                </div>
+
+                                <div>
+                                    <x-input-label for="feedback" value="Feedback" />
+                                    <textarea id="feedback" name="feedback" rows="4" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">{{ old('feedback', $proposal->feedback) }}</textarea>
+                                    <x-input-error :messages="$errors->get('feedback')" class="mt-2" />
+                                </div>
+                            </div>
+
+                            <x-primary-button>Simpan Review</x-primary-button>
+                        </form>
+                    </div>
+                </div>
+            @endcan
 
             <div>
                 <a href="{{ route('admin.proposals.index') }}" class="text-sm text-gray-600 dark:text-gray-400 hover:underline">

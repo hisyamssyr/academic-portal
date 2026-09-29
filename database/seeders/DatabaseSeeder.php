@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\ProposalStatus;
-use App\Models\Grade;
+use App\Enums\UserRole;
 use App\Models\ProjectProposal;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -15,69 +15,90 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database with demo accounts and sample data.
+     *
+     * The seeder is idempotent so it can be re-run without unique constraint errors.
      */
     public function run(): void
     {
-        $mahasiswa = User::factory()->mahasiswa()->create([
-            'name' => 'Mahasiswa Demo',
-            'email' => 'mahasiswa@example.com',
-        ]);
+        $mahasiswa = $this->demoUser('Mahasiswa Demo', 'mahasiswa@example.com', UserRole::Mahasiswa);
+        $mahasiswaLain = $this->demoUser('Mahasiswa Lain', 'mahasiswa2@example.com', UserRole::Mahasiswa);
+        $asdos = $this->demoUser('Asisten Dosen Demo', 'asdos@example.com', UserRole::Asdos);
+        $dosen = $this->demoUser('Dosen Demo', 'dosen@example.com', UserRole::Dosen);
 
-        $mahasiswaLain = User::factory()->mahasiswa()->create([
-            'name' => 'Mahasiswa Lain',
-            'email' => 'mahasiswa2@example.com',
-        ]);
+        $this->demoProposal(
+            $mahasiswa,
+            'Deteksi Penyakit Daun Padi Menggunakan CNN',
+            'Rencana proyek AI untuk mengklasifikasikan penyakit daun padi berdasarkan citra digital menggunakan convolutional neural network.',
+            ProposalStatus::Draft,
+        );
 
-        $asdos = User::factory()->asdos()->create([
-            'name' => 'Asisten Dosen Demo',
-            'email' => 'asdos@example.com',
-        ]);
+        $this->demoProposal(
+            $mahasiswa,
+            'Chatbot Layanan Akademik Berbasis NLP',
+            'Rencana proyek AI berupa chatbot yang menjawab pertanyaan mahasiswa seputar layanan akademik menggunakan pemrosesan bahasa alami.',
+            ProposalStatus::Submitted,
+        );
 
-        $dosen = User::factory()->dosen()->create([
-            'name' => 'Dosen Demo',
-            'email' => 'dosen@example.com',
-        ]);
+        $this->demoProposal(
+            $mahasiswa,
+            'Sistem Rekomendasi Mata Kuliah Pilihan',
+            'Rencana proyek AI untuk merekomendasikan mata kuliah pilihan berdasarkan riwayat nilai dan minat mahasiswa.',
+            ProposalStatus::Reviewed,
+            score: 88.5,
+            feedback: 'Analisis masalah kuat, perkuat validasi dataset.',
+            grader: $dosen,
+        );
 
-        ProjectProposal::factory()->for($mahasiswa)->create([
-            'title' => 'Deteksi Penyakit Daun Padi Menggunakan CNN',
-            'description' => 'Rencana proyek AI untuk mengklasifikasikan penyakit daun padi berdasarkan citra digital menggunakan convolutional neural network.',
-            'status' => ProposalStatus::Draft,
-        ]);
+        $this->demoProposal(
+            $mahasiswaLain,
+            'Prediksi Harga Pangan dengan Regresi',
+            'Rencana proyek AI untuk memprediksi harga komoditas pangan mingguan menggunakan model regresi.',
+            ProposalStatus::Submitted,
+        );
 
-        ProjectProposal::factory()->for($mahasiswa)->create([
-            'title' => 'Chatbot Layanan Akademik Berbasis NLP',
-            'description' => 'Rencana proyek AI berupa chatbot yang menjawab pertanyaan mahasiswa seputar layanan akademik menggunakan pemrosesan bahasa alami.',
-            'status' => ProposalStatus::Submitted,
-        ]);
+        $this->demoProposal(
+            $mahasiswaLain,
+            'Klasifikasi Sentimen Ulasan Aplikasi',
+            'Rencana proyek AI untuk mengklasifikasikan sentimen ulasan pengguna aplikasi menggunakan TF-IDF dan naive Bayes.',
+            ProposalStatus::Reviewed,
+            score: 82,
+            feedback: 'Metodologi jelas, tambahkan perbandingan model.',
+            grader: $asdos,
+        );
+    }
 
-        ProjectProposal::factory()->for($mahasiswa)->create([
-            'title' => 'Sistem Rekomendasi Mata Kuliah Pilihan',
-            'description' => 'Rencana proyek AI untuk merekomendasikan mata kuliah pilihan berdasarkan riwayat nilai dan minat mahasiswa.',
-            'status' => ProposalStatus::Reviewed,
-        ]);
+    private function demoUser(string $name, string $email, UserRole $role): User
+    {
+        return User::query()->firstOrCreate(
+            ['email' => $email],
+            [
+                'name' => $name,
+                'role' => $role,
+                'email_verified_at' => now(),
+                'password' => 'password',
+            ],
+        );
+    }
 
-        ProjectProposal::factory()->for($mahasiswaLain)->create([
-            'title' => 'Prediksi Harga Pangan dengan Regresi',
-            'description' => 'Rencana proyek AI untuk memprediksi harga komoditas pangan mingguan menggunakan model regresi.',
-            'status' => ProposalStatus::Draft,
-        ]);
-
-        Grade::factory()->for($mahasiswa, 'student')->for($dosen, 'grader')->create([
-            'course' => 'Kecerdasan Buatan',
-            'score' => 88.5,
-            'feedback' => 'Analisis masalah kuat, perkuat validasi dataset.',
-        ]);
-
-        Grade::factory()->for($mahasiswa, 'student')->for($asdos, 'grader')->create([
-            'course' => 'Pemrograman Berbasis Kerangka Kerja',
-            'score' => 92,
-            'feedback' => 'Implementasi rapi dan sesuai konvensi framework.',
-        ]);
-
-        Grade::factory()->for($mahasiswaLain, 'student')->for($dosen, 'grader')->create([
-            'course' => 'Pembelajaran Mesin',
-            'score' => 79,
-            'feedback' => 'Perlu eksperimen tambahan untuk membandingkan model.',
-        ]);
+    private function demoProposal(
+        User $user,
+        string $title,
+        string $description,
+        ProposalStatus $status,
+        ?float $score = null,
+        ?string $feedback = null,
+        ?User $grader = null,
+    ): void {
+        ProjectProposal::query()->firstOrCreate(
+            ['user_id' => $user->id, 'title' => $title],
+            [
+                'description' => $description,
+                'status' => $status,
+                'score' => $score,
+                'feedback' => $feedback,
+                'grader_id' => $grader?->id,
+                'reviewed_at' => $grader !== null ? now() : null,
+            ],
+        );
     }
 }

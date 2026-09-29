@@ -3,47 +3,57 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ProposalStatus;
-use App\Models\Grade;
 use App\Models\ProjectProposal;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class AdminController extends Controller
 {
     /**
+     * Review statuses visible to staff; drafts stay private to their owner.
+     *
+     * @var array<int, ProposalStatus>
+     */
+    private const VISIBLE_STATUSES = [ProposalStatus::Submitted, ProposalStatus::Revised, ProposalStatus::Reviewed];
+
+    /**
      * Display the admin dashboard.
      */
     public function index(): View
     {
-        $proposalCounts = collect(ProposalStatus::cases())->mapWithKeys(
-            fn (ProposalStatus $status): array => [
-                $status->value => ProjectProposal::where('status', $status)->count(),
-            ],
-        );
-
         return view('admin.index', [
-            'proposalCounts' => $proposalCounts,
-            'totalProposals' => $proposalCounts->sum(),
-            'totalGrades' => Grade::count(),
-            'recentProposals' => ProjectProposal::with('user')->latest()->latest('id')->limit(5)->get(),
+            'pendingReviewCount' => ProjectProposal::whereIn('status', [ProposalStatus::Submitted, ProposalStatus::Revised])->count(),
+            'reviewedCount' => ProjectProposal::where('status', ProposalStatus::Reviewed)->count(),
+            'recentProposals' => ProjectProposal::query()
+                ->with('user')
+                ->whereIn('status', self::VISIBLE_STATUSES)
+                ->latest()
+                ->latest('id')
+                ->limit(5)
+                ->get(),
         ]);
     }
 
     /**
-     * Display all proposals for review.
+     * Display submitted and reviewed proposals for review.
      */
     public function proposals(Request $request): View
     {
-        $status = $request->string('status')->toString();
+        $currentStatus = ProposalStatus::tryFrom($request->string('status')->toString());
+
+        if ($currentStatus === ProposalStatus::Draft) {
+            $currentStatus = null;
+        }
 
         $proposals = ProjectProposal::query()
             ->with('user')
             ->when(
-                ProposalStatus::tryFrom($status),
+                $currentStatus,
                 fn (Builder $query, ProposalStatus $status): Builder => $query->where('status', $status),
+                fn (Builder $query): Builder => $query->whereIn('status', self::VISIBLE_STATUSES),
             )
             ->latest()
             ->latest('id')
@@ -52,34 +62,46 @@ class AdminController extends Controller
 
         return view('admin.proposals.index', [
             'proposals' => $proposals,
-            'statuses' => ProposalStatus::cases(),
-            'currentStatus' => $status,
+            'statuses' => self::VISIBLE_STATUSES,
+            'currentStatus' => $currentStatus?->value ?? '',
         ]);
     }
 
     /**
-     * Display the given proposal with its student information.
+     * Display the given proposal with its student and review information.
      */
     public function showProposal(ProjectProposal $proposal): View
     {
-        $proposal->load('user');
+        abort_if($proposal->status === ProposalStatus::Draft, 404);
+
+        $proposal->load(['user', 'grader']);
 
         return view('admin.proposals.show', ['proposal' => $proposal]);
     }
 
     /**
-     * Update the review status of the given proposal.
+     * Store the review result and mark the given proposal as reviewed.
      */
-    public function updateProposalStatus(Request $request, ProjectProposal $proposal): RedirectResponse
+    public function reviewProposal(Request $request, ProjectProposal $proposal): RedirectResponse
     {
+        Gate::authorize('input-nilai');
+
+        abort_if($proposal->status === ProposalStatus::Draft, 404);
+
         $validated = $request->validate([
-            'status' => ['required', Rule::enum(ProposalStatus::class)],
+            'score' => ['required', 'numeric', 'min:0', 'max:100'],
+            'feedback' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $proposal->update($validated);
+        $proposal->update([
+            ...$validated,
+            'status' => ProposalStatus::Reviewed,
+            'grader_id' => $request->user()->id,
+            'reviewed_at' => now(),
+        ]);
 
         return redirect()
             ->route('admin.proposals.show', $proposal)
-            ->with('status', 'proposal-status-updated');
+            ->with('status', 'proposal-reviewed');
     }
 }

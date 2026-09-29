@@ -61,7 +61,14 @@ class ProposalController extends Controller
     {
         $this->authorize('update', $proposal);
 
-        $proposal->update($request->validated());
+        $attributes = $request->validated();
+
+        // A reviewed proposal must be reviewed again after the student edits it.
+        if ($proposal->status === ProposalStatus::Reviewed) {
+            $attributes['status'] = ProposalStatus::Revised;
+        }
+
+        $proposal->update($attributes);
 
         return redirect()
             ->route('proposals.index')

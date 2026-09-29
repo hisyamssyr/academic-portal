@@ -29,9 +29,6 @@
                         <x-nav-link :href="route('admin.proposals.index')" :active="request()->routeIs('admin.proposals.*')">
                             Review Proposal
                         </x-nav-link>
-                        <x-nav-link :href="route('admin.grades.index')" :active="request()->routeIs('admin.grades.*')">
-                            Nilai
-                        </x-nav-link>
                     @endcan
                 </div>
             </div>
@@ -105,9 +102,6 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.proposals.index')" :active="request()->routeIs('admin.proposals.*')">
                     Review Proposal
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.grades.index')" :active="request()->routeIs('admin.grades.*')">
-                    Nilai
                 </x-responsive-nav-link>
             @endcan
         </div>

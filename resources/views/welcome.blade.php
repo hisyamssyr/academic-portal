@@ -45,8 +45,8 @@
                             Selamat datang di {{ config('app.name', 'Secure Academic Portal') }}
                         </h1>
                         <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                            Portal akademik sederhana untuk mengelola proposal rencana proyek AI, peninjauan oleh
-                            dosen dan asisten dosen, serta input nilai mahasiswa.
+                            Portal akademik sederhana untuk mengelola proposal rencana proyek AI, peninjauan serta
+                            pemberian nilai dan feedback proposal oleh dosen dan asisten dosen.
                         </p>
 
                         <div class="mt-8 flex flex-wrap gap-3">
@@ -75,13 +75,13 @@
                         <div class="rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm">
                             <h2 class="font-semibold text-gray-900 dark:text-gray-100">Asisten Dosen</h2>
                             <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                Meninjau proposal mahasiswa dan menginput nilai.
+                                Meninjau proposal serta memberi nilai dan feedback.
                             </p>
                         </div>
                         <div class="rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm">
                             <h2 class="font-semibold text-gray-900 dark:text-gray-100">Dosen</h2>
                             <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                Meninjau proposal mahasiswa dan menginput nilai.
+                                Meninjau proposal serta memberi nilai dan feedback.
                             </p>
                         </div>
                     </div>

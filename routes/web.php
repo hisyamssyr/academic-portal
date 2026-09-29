@@ -2,7 +2,6 @@
 
 use App\Enums\UserRole;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\GradeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use Illuminate\Http\Request;
@@ -43,11 +42,7 @@ Route::middleware(['auth', 'cek.peran'])->prefix('admin')->name('admin.')->group
 
     Route::get('proposals', [AdminController::class, 'proposals'])->name('proposals.index');
     Route::get('proposals/{proposal}', [AdminController::class, 'showProposal'])->name('proposals.show');
-    Route::patch('proposals/{proposal}/status', [AdminController::class, 'updateProposalStatus'])->name('proposals.update');
-
-    Route::get('grades', [GradeController::class, 'index'])->name('grades.index');
-    Route::get('grades/create', [GradeController::class, 'create'])->name('grades.create');
-    Route::post('grades', [GradeController::class, 'store'])->name('grades.store');
+    Route::patch('proposals/{proposal}/review', [AdminController::class, 'reviewProposal'])->name('proposals.review');
 });
 
 require __DIR__.'/auth.php';

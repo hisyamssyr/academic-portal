@@ -42,26 +42,6 @@ class User extends Authenticatable
         return $this->hasMany(ProjectProposal::class);
     }
 
-    /**
-     * Grades the user received as a student.
-     *
-     * @return HasMany<Grade, $this>
-     */
-    public function gradesReceived(): HasMany
-    {
-        return $this->hasMany(Grade::class, 'student_id');
-    }
-
-    /**
-     * Grades the user gave as a lecturer or teaching assistant.
-     *
-     * @return HasMany<Grade, $this>
-     */
-    public function gradesGiven(): HasMany
-    {
-        return $this->hasMany(Grade::class, 'grader_id');
-    }
-
     public function isStaff(): bool
     {
         return $this->role->isStaff();

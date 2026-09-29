@@ -38,12 +38,16 @@ class ProjectProposalFactory extends Factory
     }
 
     /**
-     * Indicate that the proposal has been reviewed.
+     * Indicate that the proposal has been reviewed and graded.
      */
     public function reviewed(): static
     {
         return $this->state(fn (array $attributes) => [
             'status' => ProposalStatus::Reviewed,
+            'score' => fake()->randomFloat(2, 70, 100),
+            'feedback' => fake()->sentence(),
+            'grader_id' => User::factory()->dosen(),
+            'reviewed_at' => now(),
         ]);
     }
 }

@@ -5,8 +5,7 @@
         'proposal-created' => 'Proposal berhasil dibuat dan disimpan sebagai draft.',
         'proposal-updated' => 'Proposal berhasil diperbarui.',
         'proposal-submitted' => 'Proposal berhasil diajukan untuk ditinjau.',
-        'proposal-status-updated' => 'Status proposal berhasil diperbarui.',
-        'grade-created' => 'Nilai berhasil disimpan.',
+        'proposal-reviewed' => 'Review berhasil disimpan. Nilai dan feedback sudah tercatat.',
     ];
 @endphp
 

@@ -28,6 +28,7 @@
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Judul</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Mahasiswa</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Nilai</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Diajukan</th>
                                     <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Aksi</th>
                                 </tr>
@@ -43,6 +44,9 @@
                                         <td class="px-4 py-4">
                                             <x-proposal-status :status="$proposal->status" />
                                         </td>
+                                        <td class="px-4 py-4 text-sm font-semibold">
+                                            {{ $proposal->score ?? '-' }}
+                                        </td>
                                         <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
                                             {{ $proposal->created_at->format('d M Y H:i') }}
                                         </td>
@@ -54,7 +58,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                             Tidak ada proposal untuk filter ini.
                                         </td>
                                     </tr>

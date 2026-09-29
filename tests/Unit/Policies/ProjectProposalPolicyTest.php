@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Policies;
 
+use App\Enums\ProposalStatus;
 use App\Enums\UserRole;
 use App\Models\ProjectProposal;
 use App\Models\User;
@@ -61,6 +62,16 @@ class ProjectProposalPolicyTest extends TestCase
     {
         $owner = User::factory()->mahasiswa()->create();
         $proposal = ProjectProposal::factory()->for($owner)->reviewed()->create();
+
+        $this->assertFalse((new ProjectProposalPolicy)->submit($owner, $proposal));
+    }
+
+    public function test_owner_cannot_submit_revised_proposal(): void
+    {
+        $owner = User::factory()->mahasiswa()->create();
+        $proposal = ProjectProposal::factory()->for($owner)->reviewed()->create([
+            'status' => ProposalStatus::Revised,
+        ]);
 
         $this->assertFalse((new ProjectProposalPolicy)->submit($owner, $proposal));
     }
