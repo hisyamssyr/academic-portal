@@ -16,7 +16,12 @@ Route::get('/dashboard', function (Request $request) {
         ? $user->proposals()->latest()->latest('id')->get()
         : collect();
 
-    return view('dashboard', ['proposals' => $proposals]);
+    $projects = $user->projects()->latest()->latest('id')->get();
+
+    return view('dashboard', [
+        'proposals' => $proposals,
+        'projects' => $projects,
+    ]);
 })->middleware('auth')->name('dashboard');
 
 Route::middleware(['auth', 'cek.peran:mahasiswa'])->group(function () {

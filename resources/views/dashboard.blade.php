@@ -19,6 +19,45 @@
                 </div>
             </div>
 
+            <!-- Agentic AI Projects -->
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <h3 class="text-lg font-semibold">Project Agentic AI Saya</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Rancangan ide proposal Agentic AI milik akun yang sedang masuk.
+                    </p>
+
+                    @if ($projects->isEmpty())
+                        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                            Belum ada project Agentic AI.
+                        </p>
+                    @else
+                        <ul class="mt-4 divide-y divide-gray-200 dark:divide-gray-700">
+                            @foreach ($projects as $project)
+                                <li class="py-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                        <p class="font-medium">{{ $project->judul }}</p>
+                                        <span class="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900 px-3 py-1 text-xs font-medium text-emerald-800 dark:text-emerald-300">
+                                            {{ $project->tema_agent }}
+                                        </span>
+                                    </div>
+
+                                    @if ($project->deskripsi)
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            {{ $project->deskripsi }}
+                                        </p>
+                                    @endif
+
+                                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                                        Dibuat {{ $project->created_at->diffForHumans() }}
+                                    </p>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
+
             @if (Auth::user()->role === \App\Enums\UserRole::Mahasiswa)
                 <!-- Student Proposals -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">

@@ -42,6 +42,16 @@ class User extends Authenticatable
         return $this->hasMany(ProjectProposal::class);
     }
 
+    /**
+     * Agentic AI project proposals owned by the user.
+     *
+     * @return HasMany<Project, $this>
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
     public function isStaff(): bool
     {
         return $this->role->isStaff();

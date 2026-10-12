@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\ProposalStatus;
 use App\Enums\UserRole;
+use App\Models\Project;
 use App\Models\ProjectProposal;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -19,6 +20,58 @@ class DatabaseSeeder extends Seeder
      * The seeder is idempotent so it can be re-run without unique constraint errors.
      */
     public function run(): void
+    {
+        $this->seedStudentPortfolios();
+        $this->seedDemoAccount();
+        $this->seedProposalSamples();
+    }
+
+    /**
+     * Seed 15 random students, each owning two Agentic AI project proposals.
+     */
+    private function seedStudentPortfolios(): void
+    {
+        foreach (range(1, 15) as $index) {
+            $attributes = User::factory()->mahasiswa()->make()->getAttributes();
+            unset($attributes['email']);
+
+            $student = User::query()->firstOrCreate(
+                ['email' => "mahasiswa{$index}@student.its.ac.id"],
+                $attributes,
+            );
+
+            if ($student->projects()->doesntExist()) {
+                Project::factory()->count(2)->for($student)->create();
+            }
+        }
+    }
+
+    /**
+     * Seed the ready-to-present demo account for the examiner.
+     */
+    private function seedDemoAccount(): void
+    {
+        $dosen = User::query()->firstOrCreate(
+            ['email' => 'dosenpbkk@its.ac.id'],
+            [
+                'name' => 'Dosen Penguji PBKK',
+                'role' => UserRole::Dosen,
+                'email_verified_at' => now(),
+                'password' => 'password',
+            ],
+        );
+
+        if ($dosen->projects()->doesntExist()) {
+            Project::factory()->count(3)->for($dosen)->create([
+                'tema_agent' => 'Ollama',
+            ]);
+        }
+    }
+
+    /**
+     * Seed the legacy demo proposal accounts used across the application.
+     */
+    private function seedProposalSamples(): void
     {
         $mahasiswa = $this->demoUser('Mahasiswa Demo', 'mahasiswa@example.com', UserRole::Mahasiswa);
         $mahasiswaLain = $this->demoUser('Mahasiswa Lain', 'mahasiswa2@example.com', UserRole::Mahasiswa);
